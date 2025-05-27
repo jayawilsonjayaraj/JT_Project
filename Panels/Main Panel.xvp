@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<Panel Type="Vector.CANalyzer.Panels.PanelSerializer, Vector.CANalyzer.Panels.Serializer, Version=10.0.63.0, Culture=neutral, PublicKeyToken=null">
+  <Object Type="Vector.CANalyzer.Panels.Runtime.Panel, Vector.CANalyzer.Panels.Common, Version=10.0.63.0, Culture=neutral, PublicKeyToken=null" Name="Panel" Children="Controls" ControlName="Main Panel">
+    <Object Type="Vector.CANalyzer.Panels.Design.PanelButtonControl, Vector.CANalyzer.Panels.CommonControls, Version=10.0.63.0, Culture=neutral, PublicKeyToken=null" Name="PanelButtonControl1" Children="Controls" ControlName="Panel Control Button">
+      <Property Name="Name">PanelButtonControl1</Property>
+      <Property Name="Size">196, 36</Property>
+      <Property Name="Location">96, 342</Property>
+      <Property Name="PanelList">1;1;Message_Panels.xvp</Property>
+      <Property Name="NodeList">1;0</Property>
+      <Property Name="NetworkList">1;0</Property>
+      <Property Name="Font">Microsoft Sans Serif, 16.2pt, style=Bold</Property>
+      <Property Name="Text">CANmessages</Property>
+      <Property Name="TabIndex">5</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.StaticTextControl, Vector.CANalyzer.Panels.CommonControls, Version=10.0.63.0, Culture=neutral, PublicKeyToken=null" Name="StaticTextControl3" Children="Controls" ControlName="Static Text 3">
+      <Property Name="Name">StaticTextControl3</Property>
+      <Property Name="Size">160, 26</Property>
+      <Property Name="Location">325, 266</Property>
+      <Property Name="Font">Microsoft Sans Serif, 16.2pt, style=Bold</Property>
+      <Property Name="Text">Ignition Switch</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.StaticTextControl, Vector.CANalyzer.Panels.CommonControls, Version=10.0.63.0, Culture=neutral, PublicKeyToken=null" Name="StaticTextControl2" Children="Controls" ControlName="Static Text 2">
+      <Property Name="Name">StaticTextControl2</Property>
+      <Property Name="Size">134, 26</Property>
+      <Property Name="Location">96, 266</Property>
+      <Property Name="Font">Microsoft Sans Serif, 16.2pt, style=Bold</Property>
+      <Property Name="Text">Main Switch</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.SwitchControl, Vector.CANalyzer.Panels.CommonControls, Version=10.0.63.0, Culture=neutral, PublicKeyToken=null" Name="SwitchControl2" ControlName="Switch/Indicator 2">
+      <Property Name="Name">SwitchControl2</Property>
+      <Property Name="Size">56, 80</Property>
+      <Property Name="Location">325, 174</Property>
+      <Property Name="StateCnt">2</Property>
+      <Property Name="SwitchValues">1;2;0;1</Property>
+      <Property Name="SymbolConfiguration">
+      </Property>
+      <Property Name="TabIndex">2</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.SwitchControl, Vector.CANalyzer.Panels.CommonControls, Version=10.0.63.0, Culture=neutral, PublicKeyToken=null" Name="SwitchControl1" ControlName=" ">
+      <Property Name="Name">SwitchControl1</Property>
+      <Property Name="Size">56, 80</Property>
+      <Property Name="Location">96, 174</Property>
+      <Property Name="StateCnt">2</Property>
+      <Property Name="SwitchValues">1;2;0;1</Property>
+      <Property Name="SymbolConfiguration">5;16;Main_Switches;;;Sys_MainSwitch;1;;;-1;;;</Property>
+      <Property Name="TabIndex">1</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.StaticTextControl, Vector.CANalyzer.Panels.CommonControls, Version=10.0.63.0, Culture=neutral, PublicKeyToken=null" Name="StaticTextControl1" Children="Controls" ControlName="Static Text">
+      <Property Name="Name">StaticTextControl1</Property>
+      <Property Name="Size">333, 74</Property>
+      <Property Name="Location">77, 55</Property>
+      <Property Name="Font">Microsoft Sans Serif, 48pt, style=Bold</Property>
+      <Property Name="Text">Main Panel</Property>
+      <Property Name="ForeColor">Red</Property>
+    </Object>
+    <Property Name="Name">Panel</Property>
+    <Property Name="Size">697, 442</Property>
+    <Property Name="BackColor">White</Property>
+  </Object>
+</Panel>

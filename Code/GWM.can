@@ -1,0 +1,260 @@
+/*@!Encoding:1252*/
+/* GWM CODE
+   ======== */
+includes
+{
+  
+}
+/* Global Variabls's 
+   ================== */
+variables // Declare Variable with message Name, declare Timer Variable and Declare constant variable for cycle time.
+{
+  /* Declare Variable with message Name */
+  message Ball_Game_Mode_CAN CAN_BALL_GAME_MODE_CAN;                       // variable for ball game message
+  message ABS_Msg_Data_CAN   CAN_ABS_MSG_DATA_CAN;                         // variable for ABS message
+  message RDS_Coder_Data_CAN CAN_RDS_CODER_DATA_CAN;                       // variable for RDS_Coder_Data_CAN message
+  
+  /* Declare Timer Variable for rerspective ms or sec*/
+  msTimer TIMER_BALL_GAME_MODE_CAN;                                       //  ms Timer for Ball game message. 
+  msTimer TIMER_ABS_MSG_DATA_CAN;                                         //  ms Timer for ABS message.   
+ 
+  /* Declare constant variable for cycle time */
+  const long TIMER_VALUE_BALL_GAME_MODE_CAN = 50;                         //  50ms    - Fixed Periodic.
+  const long TIMER_VALUE_ABS_MSG_DATA_CAN   = 1500;                       //  1500ms  - Event Periodic.
+}
+  /* Start Measurement */
+on start{                                                                 //  After start set timer for 50ms.
+  settimer(TIMER_BALL_GAME_MODE_CAN, TIMER_VALUE_BALL_GAME_MODE_CAN);     //  settimer (timer_variable, timer_range)
+  settimer(TIMER_ABS_MSG_DATA_CAN, TIMER_VALUE_ABS_MSG_DATA_CAN);         //  settimer (timer_variable, timer_range)  
+}
+
+/*   Ball_Game_Mode_CAN  - Fixed Periodic     // FOr fixed periodic we don't neeed to call message sending function on every system variable function.
+     ====================  =============== */
+
+on timer TIMER_BALL_GAME_MODE_CAN {                                       //  After timer reach 50 ms 
+  sendBall_Game_Mode_CAN();                                               //  i)Call condition checking function for send message on CAN. 
+  settimer(TIMER_BALL_GAME_MODE_CAN, TIMER_VALUE_BALL_GAME_MODE_CAN);     // ii)Start timer counting again.         
+  }
+
+void sendBall_Game_Mode_CAN(){     // Check switch condition, If condition is ok then send messages on CAN.
+  byte can_miss_value = 0;
+  byte can_main_value = 0;
+  
+  can_miss_value = @Main_Switches::Sys_MainSwitch;                        // get Main switch value in one variable. 
+  can_main_value = @Main_Switches::Sys_Miss_Ball_Game_Mode_CAN;           // get Ball game mode message missing switch value in one variable. 
+  
+  if((can_miss_value == 0x0) && (can_main_value == 0)) {                  // if both switches are in off position then
+     output(CAN_BALL_GAME_MODE_CAN);                                      // Messages on CAN.
+  }
+}
+/*if click value in Panel it will goes to CAN.If system variable trigger then taking system variable value to Signal */
+on sysvar GWM::Sys_Actv_Live_1_Rq                                         // If system variable trigger then 
+{                                                                         // taking system variable value to Signal.
+  CAN_BALL_GAME_MODE_CAN.Actv_Live_1_Rq = @GWM::Sys_Actv_Live_1_Rq;  
+}
+on sysvar GWM::Sys_Actv_Live_2_Rq
+{
+  CAN_BALL_GAME_MODE_CAN.Actv_Live_2_Rq = @GWM::Sys_Actv_Live_2_Rq;  
+}
+on sysvar GWM::Sys_Preset_6_Bank_Rq
+{
+  CAN_BALL_GAME_MODE_CAN.Preset_6_Bank_Rq = @GWM::Sys_Preset_6_Bank_Rq;  
+}
+on sysvar GWM::Sys_Preset_12_Bank_Rq
+{
+  byte max_value =0;
+  max_value = @GWM::Sys_Preset_12_Bank_Rq;
+  
+  if(max_value <= 0xF){                                                     // if value range goes to out of range error panel will open.
+    CAN_BALL_GAME_MODE_CAN.Preset_12_Bank_Rq = @GWM::Sys_Preset_12_Bank_Rq; 
+  }
+  else {
+    OpenPanel("ERRORPANEL");
+  }
+}
+on sysvar GWM::Sys_FM_Menu_Data_Rq
+{
+  byte max_value =0;
+  max_value = @GWM::Sys_FM_Menu_Data_Rq;
+  
+  if(max_value <= 0xFF){                                                   // if value range goes to out of range error panel will open.
+    CAN_BALL_GAME_MODE_CAN.FM_Menu_Data_Rq = @GWM::Sys_FM_Menu_Data_Rq; 
+  }
+  else {
+    OpenPanel("ERRORPANEL");
+  }
+}
+on sysvar GWM::Sys_AM_Menu_Data_Rq
+{
+  byte max_value =0;
+  max_value = @GWM::Sys_AM_Menu_Data_Rq;
+  
+  if(max_value <= 0xFFFF){
+    CAN_BALL_GAME_MODE_CAN.AM_Menu_Data_Rq = @GWM::Sys_AM_Menu_Data_Rq; 
+  }
+  else {
+    OpenPanel("ERRORPANEL");
+  }
+}
+
+/*   ABS_Msg_Data_CAN  - Event Periodic
+     ================    ============== */
+
+on timer TIMER_ABS_MSG_DATA_CAN {                                        //  After timer reach 50 ms 
+  sendABS_Msg_Data_CAN();                                                //  i)Call condition checking function for send message on CAN. 
+  settimer(TIMER_ABS_MSG_DATA_CAN, TIMER_VALUE_ABS_MSG_DATA_CAN);         //  settimer (timer_variable, timer_range)    
+  }
+
+void sendABS_Msg_Data_CAN() {
+  byte can_ABS_message_switch = 0;
+  byte can_Main_message_switch = 0;
+  
+  can_ABS_message_switch  = @Main_Switches::Sys_Miss_ABS_Msg_Data_CAN;        // switch belongs to ABS message panel.
+  can_Main_message_switch = @Main_Switches::Sys_MainSwitch ;  
+  
+  if((can_ABS_message_switch == 0x0) && (can_Main_message_switch == 0x0)) {
+  output(CAN_ABS_MSG_DATA_CAN);                                               // Send ABS Message variable on CAN.
+  }
+}
+
+on sysvar GWM::Sys_Indictr_Lft_Dsply {                                        // check system variable
+  CAN_ABS_MSG_DATA_CAN.Indictr_Lft_Dsply = @GWM::Sys_Indictr_Lft_Dsply;       // Assign that system variable to one signal of perticular message.
+  sendABS_Msg_Data_CAN();  
+}
+on sysvar GWM::Sys_Indictr_Rgt_Dsply {
+   CAN_ABS_MSG_DATA_CAN.Indictr_Rgt_Dsply = @GWM::Sys_Indictr_Rgt_Dsply;
+   sendABS_Msg_Data_CAN();   
+}
+on sysvar GWM::Sys_MID_Msg_Rq {
+    CAN_ABS_MSG_DATA_CAN.MID_Msg_Rq = @ GWM::Sys_MID_Msg_Rq;
+    sendABS_Msg_Data_CAN();        
+}
+  
+on sysvar GWM::Sys_MID_Data_Rq {
+    byte Max_value =0;
+    Max_value = @GWM::Sys_MID_Data_Rq;
+    if(Max_value <= 0xFF) {
+    CAN_ABS_MSG_DATA_CAN.MID_Data_Rq = @GWM::Sys_MID_Data_Rq;
+    sendABS_Msg_Data_CAN();   
+    }
+    else {
+    openpanel("ERRORPANEL");  
+    }
+}
+on sysvar GWM::Sys_HMI_MID_Sgnl_1_Rq {
+   byte max_value = 0;
+   max_value = @GWM::Sys_HMI_MID_Sgnl_1_Rq;
+   if( max_value <= 0xF) {
+   CAN_ABS_MSG_DATA_CAN.HMI_MID_Sgnl_1_Rq = @GWM::Sys_HMI_MID_Sgnl_1_Rq;
+   sendABS_Msg_Data_CAN();
+   }
+   else {
+    openpanel("ERRORPANEL");
+   }
+}
+on sysvar GWM::Sys_HMI_MID_Sgnl_2_Rq {
+   byte max_value = 0;
+   max_value = @GWM::Sys_HMI_MID_Sgnl_2_Rq;
+   if( max_value <= 0xF) {  
+   CAN_ABS_MSG_DATA_CAN.HMI_MID_Sgnl_2_Rq = @GWM::Sys_HMI_MID_Sgnl_2_Rq;
+   sendABS_Msg_Data_CAN();   
+   }
+   else {
+    openpanel("ERRORPANEL");
+   }  
+}
+on sysvar GWM::Sys_HMI_MID_Sgnl_3_Rq {
+   byte max_value = 0;
+   max_value = @GWM::Sys_HMI_MID_Sgnl_3_Rq;
+   if( max_value <= 0xF) { 
+   CAN_ABS_MSG_DATA_CAN.HMI_MID_Sgnl_3_Rq = @GWM::Sys_HMI_MID_Sgnl_3_Rq;
+   sendABS_Msg_Data_CAN(); 
+   }
+   else {
+    openpanel("ERRORPANEL");
+   }  
+  
+}
+
+/*   RDS_Coder_Data_CAN  - Event 
+     ==================    ===== */
+     /* Event based messages. so
+        Timer not needed.
+        periodic cycle not needed.
+        on start function also not needed.  */
+
+
+void sendRDS_Coder_Data_CAN() {
+   byte can_Main_message_switch = 0; 
+        can_Main_message_switch = @Main_Switches::Sys_MainSwitch ;   
+   if(can_Main_message_switch == 0x0) {
+      output(CAN_RDS_CODER_DATA_CAN);                               // Send RDS Message variable on CAN.
+   }
+ 
+}
+
+on sysvar GWM::Sys_TA_Data_Rq {
+    CAN_RDS_CODER_DATA_CAN.TA_Data_Rq = @GWM::Sys_TA_Data_Rq;
+    sendRDS_Coder_Data_CAN();                                      // Send RDS Message variable on CAN. after get value to signal.
+}
+on sysvar GWM::Sys_Ahb_Dsply {
+    CAN_RDS_CODER_DATA_CAN.Ahb_Dsply = @GWM::Sys_Ahb_Dsply;  
+    sendRDS_Coder_Data_CAN();                                      // Send RDS Message variable on CAN. after get value to signal.
+}
+on sysvar GWM::Sys_TP_Data_Rq {
+   byte max_value = 0;
+   max_value = @GWM::Sys_TP_Data_Rq;
+   if( max_value <= 0xF) { 
+   CAN_RDS_CODER_DATA_CAN.TP_Data_Rq = @GWM::Sys_TP_Data_Rq;
+   sendRDS_Coder_Data_CAN(); 
+   }
+   else {
+    openpanel("ERRORPANEL");
+   }  
+}
+on sysvar GWM::Sys_Sig_Spdmtr_Rq{
+   byte max_value = 0;
+   max_value = @GWM::Sys_Sig_Spdmtr_Rq;
+   if( max_value <= 0xF0) { 
+   CAN_RDS_CODER_DATA_CAN.Sig_Spdmtr_Rq = @GWM::Sys_Sig_Spdmtr_Rq;
+   sendRDS_Coder_Data_CAN(); 
+   }
+   else {
+    openpanel("ERRORPANEL");
+   }  
+}
+
+/* Messages sending control switches */
+On sysvar Main_Switches::Sys_MainSwitch                                   // If Main switch is missing canacel Timer or Entire CAN Messages.
+{                                                                         // else start timer count again.
+  if(@Main_Switches::Sys_MainSwitch == 0x1){
+    cancelTimer (TIMER_BALL_GAME_MODE_CAN);                               // 
+    canceltimer(TIMER_ABS_MSG_DATA_CAN);
+  }
+  else {
+    settimer(TIMER_BALL_GAME_MODE_CAN, TIMER_VALUE_BALL_GAME_MODE_CAN);
+    settimer(TIMER_ABS_MSG_DATA_CAN,TIMER_VALUE_ABS_MSG_DATA_CAN);
+  } 
+}
+On sysvar Main_Switches::Sys_Miss_Ball_Game_Mode_CAN                      // if Ball_Game_Mode_CAN message switch is missing canacel Timer or Perticular message.)
+{                                                                         // else start timer count again.
+  if(@Main_Switches::Sys_Miss_Ball_Game_Mode_CAN == 0x1){
+    cancelTimer (TIMER_BALL_GAME_MODE_CAN);
+  }
+  else {
+    settimer(TIMER_BALL_GAME_MODE_CAN, TIMER_VALUE_BALL_GAME_MODE_CAN);
+  } 
+}
+on sysvar Main_Switches::Sys_Miss_ABS_Msg_Data_CAN {                     // Remove all ABS message signals if ABS message switch is ON.
+  if(@Main_Switches::Sys_Miss_ABS_Msg_Data_CAN == 0x1) {
+    canceltimer(TIMER_ABS_MSG_DATA_CAN);
+  }
+  else {
+    settimer(TIMER_ABS_MSG_DATA_CAN,TIMER_VALUE_ABS_MSG_DATA_CAN);
+  }
+}
+
+/*  #################################################################################### */
+
+
+

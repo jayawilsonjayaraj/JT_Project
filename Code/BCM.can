@@ -1,0 +1,164 @@
+/*@!Encoding:1252*/
+/*@!Encoding:1252*/
+/* BCM CODE
+   ======== */
+includes
+{
+  
+}
+/* Global Variabls's 
+   ================== */
+variables // Declare Variable with message Name, declare Timer Variable and Declare constant variable for cycle time.
+{
+  /* Declare Variable with message Name */
+  message BCM_Msg_1_CAN       CAN_BCM_MSG_1_CAN;                          // variable for BCM_Msg message
+  message Drive_Asst_Data_CAN CAN_DRIVER_ASST_DATA_CAN;                   // variable for Drive_Asst message
+  
+  /* Declare Timer Variable for rerspective ms or sec*/
+  msTimer TIMER_BCM_MSG_1_CAN;                                            //  ms Timer for Ball game message. 
+  msTimer TIMER_DRIVER_ASST_DATA_CAN;                                     //  ms Timer for ABS message.   
+ 
+  /* Declare constant variable for cycle time */
+  const long TIMER_VALUE_BCM_MSG_1_CAN      = 100;                        //  100ms   - Fixed Periodic.
+  const long TIMER_VALUE_DRIVER_ASST_DATA   = 1000;                       //  1000ms  - Event Periodic.
+}
+ /* Start Timers on 1st Time 
+    ===== ====== == === ==== */
+on start{                                                                 //  After start set timer for 50ms.
+  settimer(TIMER_BCM_MSG_1_CAN, TIMER_VALUE_BCM_MSG_1_CAN);               //  settimer (timer_variable, timer_range)
+  settimer(TIMER_DRIVER_ASST_DATA_CAN, TIMER_VALUE_DRIVER_ASST_DATA);     //  settimer (timer_variable, timer_range)  
+}
+
+/*   BCM_Msg_1_CAN  - Fixed Periodic
+     =============    =============== */
+  /* After Timer reach, send message on CAN after condition checks ther restart & count timer again. */  
+on timer TIMER_BCM_MSG_1_CAN {                                           //  After timer reach 50 ms 
+   sendBCM_Msg_1_CAN();                                                  //  i)Call condition checking function for send message on CAN. 
+   settimer(TIMER_BCM_MSG_1_CAN, TIMER_VALUE_BCM_MSG_1_CAN);             // ii)Start timer counting again.         
+  }
+  /* Condition checks & send messages on CAN */
+void sendBCM_Msg_1_CAN(){     // Check switch condition, If condition is ok then send messages on CAN.
+  byte can_miss_value = 0;
+  byte can_main_value = 0;
+  
+  can_miss_value = @Main_Switches::Sys_MainSwitch;                        // get Main switch value in one variable. 
+  can_main_value = @Main_Switches::Sys_Miss_BCM_Msg_1_CAN;                // get Ball game mode message missing switch value in one variable. 
+  
+  if((can_miss_value == 0x0) && (can_main_value == 0)) {                  // if both switches are in off position then
+     output(CAN_BCM_MSG_1_CAN);                                           // Messages on CAN.
+  }
+}
+  /* Checks System Variable's*/
+  /*if click value in Panel it will goes to CAN.If system variable trigger then taking system variable value to Signal */ 
+on sysvar BCM::Sys_CRD_Msg_Txt_Rq_Dsply {                                       // If system variable trigger then                                                                          // taking system variable value to Signal.
+  CAN_BCM_MSG_1_CAN.CRD_Msg_Txt_Rq_Dsply = @BCM::Sys_CRD_Msg_Txt_Rq_Dsply;      // System variable value assign to signal.
+}
+on sysvar BCM::Sys_Ignition_Status {
+  CAN_BCM_MSG_1_CAN.Ignition_Status = @BCM::Sys_Ignition_Status;  
+}
+on sysvar BCM::Sys_CRD_Msg_Txt_Rq {
+  byte max_value =0;
+  max_value = @BCM::Sys_CRD_Msg_Txt_Rq;
+  
+  if(max_value <= 0xFFFF){                                                     // if value range goes to out of range error panel will open.
+    CAN_BCM_MSG_1_CAN.CRD_Msg_Txt_Rq = @BCM::Sys_CRD_Msg_Txt_Rq; 
+  }
+  else {
+    OpenPanel("ERRORPANEL");
+  }
+}
+
+/*  #####################################################################################################   */
+
+/*   Drive_Asst_Data_CAN  - Event Periodic
+     ====================    ============== */
+  /* After Timer reach, send message on CAN after condition checks ther restart & count timer again. */
+on timer TIMER_DRIVER_ASST_DATA_CAN {                                         //  After timer reach 50 ms 
+  sendDrive_Asst_Data_CAN();                                                  //  i)Call condition checking function for send message on CAN. 
+  settimer(TIMER_DRIVER_ASST_DATA_CAN, TIMER_VALUE_DRIVER_ASST_DATA);         //  settimer (timer_variable, timer_range)    
+  }
+
+void sendDrive_Asst_Data_CAN() {
+  byte can_Drive_Asst_message_switch = 0;
+  byte can_Main_message_switch = 0;
+  
+  can_Drive_Asst_message_switch  = @Main_Switches::Sys_Miss_Drive_Asst_Data_CAN;        // switch belongs to ABS message panel.
+  can_Main_message_switch = @Main_Switches::Sys_MainSwitch ;  
+  
+  if((can_Drive_Asst_message_switch == 0x0) && (can_Main_message_switch == 0x0)) {
+  output(CAN_DRIVER_ASST_DATA_CAN);                                               // Send ABS Message variable on CAN.
+  }
+}
+
+on sysvar BCM::Sys_Menu_scrn_1_Data{                                        // check system variable
+   CAN_DRIVER_ASST_DATA_CAN.Menu_scrn_1_Data = @BCM::Sys_Menu_scrn_1_Data;   // Assign that system variable to one signal of perticular message.
+   sendDrive_Asst_Data_CAN();                                                // we need to call message sending fumction inside every sys function for Event Periodic.
+}
+on sysvar BCM::Sys_Artst_Name_1_Rq {
+   CAN_DRIVER_ASST_DATA_CAN.Artst_Name_1_Rq = @BCM::Sys_Artst_Name_1_Rq;
+   sendDrive_Asst_Data_CAN();   
+}
+on sysvar BCM::Sys_Artst_Name_2_Rq {
+   CAN_DRIVER_ASST_DATA_CAN.Artst_Name_2_Rq = @BCM::Sys_Artst_Name_2_Rq;
+   sendDrive_Asst_Data_CAN();   
+}
+
+on sysvar BCM::Sys_Radio_Txt_1_Rq {
+    byte Max_value =0;
+    Max_value = @BCM::Sys_Radio_Txt_1_Rq;
+    if(Max_value <= 0xF) {
+    CAN_DRIVER_ASST_DATA_CAN.Radio_Txt_1_Rq = @BCM::Sys_Radio_Txt_1_Rq;
+    sendDrive_Asst_Data_CAN();   
+    }
+    else {
+    openpanel("ERRORPANEL");  
+    }
+}
+on sysvar BCM::Sys_Radio_Txt_2_Rq {
+    byte Max_value =0;
+    Max_value = @BCM::Sys_Radio_Txt_2_Rq;
+    if(Max_value <= 0xF) {
+    CAN_DRIVER_ASST_DATA_CAN.Radio_Txt_2_Rq = @BCM::Sys_Radio_Txt_2_Rq;
+    sendDrive_Asst_Data_CAN();   
+    }
+    else {
+    openpanel("ERRORPANEL");  
+    }
+}
+on sysvar BCM::Sys_Radio_Txt_3_Rq {
+    byte Max_value =0;
+    Max_value = @BCM::Sys_Radio_Txt_3_Rq;
+    if(Max_value <= 0xF) {
+    CAN_DRIVER_ASST_DATA_CAN.Radio_Txt_3_Rq = @BCM::Sys_Radio_Txt_3_Rq;
+    sendDrive_Asst_Data_CAN();   
+    }
+    else {
+    openpanel("ERRORPANEL");  
+    }
+}
+
+on sysvar BCM::Sys_Tuner_Scrn_1_Data {
+    byte Max_value =0;
+    Max_value = @BCM::Sys_Tuner_Scrn_1_Data;
+    if(Max_value <= 0xFF) {
+    CAN_DRIVER_ASST_DATA_CAN.Tuner_Scrn_1_Data = @BCM::Sys_Tuner_Scrn_1_Data;
+    sendDrive_Asst_Data_CAN();   
+    }
+    else {
+    openpanel("ERRORPANEL");  
+    }
+}
+on sysvar BCM::Sys_Tuner_Scrn_2_Data {
+    byte Max_value =0;
+    Max_value = @BCM::Sys_Tuner_Scrn_2_Data;
+    if(Max_value <= 0xFF) {
+    CAN_DRIVER_ASST_DATA_CAN.Tuner_Scrn_2_Data = @BCM::Sys_Tuner_Scrn_2_Data;
+    sendDrive_Asst_Data_CAN();   
+    }
+    else {
+    openpanel("ERRORPANEL");  
+    }
+}
+
+/*  #####################################################################################################   */
+
